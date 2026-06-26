@@ -1,0 +1,22 @@
+---
+description: Push to GitHub and deploy to Vercel when the user asks to ship changes
+alwaysApply: true
+---
+
+# Push & Deploy
+
+When the user asks to **push**, **deploy**, **ship**, **publish**, or **sync** changes to GitHub or Vercel — execute the workflow yourself. Do not tell them to run commands manually.
+
+**Trigger phrases:** "push and deploy", "deploy", "ship it", "push to github", "publish", "sync to production", "push my changes"
+
+## Required action
+
+1. Read and follow `.cursor/skills/push-and-deploy/SKILL.md` end to end.
+2. Run every step in the terminal (status, build, commit, push, verify deploy).
+3. Reply with: what was committed, commit hash, push result, and deployment status/URL.
+
+## Constraints
+
+- Never commit `.env`, `.env.local`, or any secrets.
+- Push to `main` on `origin` unless the user specifies another branch.
+- If build fails, fix or report — do not push broken code.

@@ -1,19 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LogIn, User, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { ROUTES } from "@/lib/constants";
-
-type PortalRole = "student" | "parent";
+import { CONTACT, ROUTES } from "@/lib/constants";
+import {
+  PORTAL_DEMO_EMAIL,
+  PORTAL_DEMO_PASSWORD,
+  savePortalSession,
+  type PortalRole,
+} from "@/lib/portal";
 
 export function PortalLogin() {
+  const router = useRouter();
   const [role, setRole] = useState<PortalRole>("parent");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const email = form.get("email") as string;
@@ -25,13 +32,32 @@ export function PortalLogin() {
     }
 
     setError("");
-    // Demo credentials for preview
-    if (email === "demo@bolexman.edu" && password === "demo123") {
-      alert(`Welcome! ${role === "parent" ? "Parent" : "Student"} portal login successful. (Demo mode)`);
-      return;
-    }
+    setLoading(true);
 
-    setError("Invalid credentials. Use demo@bolexman.edu / demo123 for preview access.");
+    try {
+      const response = await fetch("/api/portal/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
+      });
+
+      const data = (await response.json()) as {
+        error?: string;
+        session?: { email: string; role: PortalRole; name: string };
+      };
+
+      if (!response.ok || !data.session) {
+        setError(data.error || "Invalid credentials. Please try again.");
+        return;
+      }
+
+      savePortalSession(data.session);
+      router.push(`${ROUTES.portal}/dashboard`);
+    } catch {
+      setError("Unable to sign in right now. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,15 +124,20 @@ export function PortalLogin() {
             </p>
           )}
 
-          <Button type="submit" variant="secondary" size="lg" className="w-full">
+          <Button type="submit" variant="secondary" size="lg" className="w-full" disabled={loading}>
             <LogIn className="h-5 w-5" />
-            Sign In to {role === "parent" ? "Parent" : "Student"} Portal
+            {loading ? "Signing in..." : `Sign In to ${role === "parent" ? "Parent" : "Student"} Portal`}
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
-          Demo: demo@bolexman.edu / demo123
-        </p>
+        <div className="mt-4 space-y-2 text-center text-xs text-slate-500">
+          <p>
+            Demo: {PORTAL_DEMO_EMAIL} / {PORTAL_DEMO_PASSWORD}
+          </p>
+          <p>
+            Admin: {CONTACT.email} / your portal password
+          </p>
+        </div>
       </GlassCard>
 
       <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
