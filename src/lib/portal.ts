@@ -31,3 +31,7 @@ export function clearPortalSession() {
 export function hasPortalSession() {
   return readPortalSession() !== null;
 }
+
+export function sessionMatchesRole(session: PortalSession | null, role: PortalRole) {
+  return session?.role === role;
+}

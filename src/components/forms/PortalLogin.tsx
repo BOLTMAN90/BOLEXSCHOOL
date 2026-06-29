@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Home, LogIn, User, GraduationCap, UserPlus, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Home, LogIn, LayoutDashboard, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { PortalRolePicker } from "@/components/forms/PortalRolePicker";
+import { getPortalDashboardPath } from "@/lib/portal-content";
 import { ROUTES } from "@/lib/constants";
 import {
   clearPortalSession,
@@ -51,10 +53,7 @@ export function PortalLogin() {
 
     try {
       const endpoint = mode === "register" ? "/api/portal/register" : "/api/portal/login";
-      const body =
-        mode === "register"
-          ? { email, password, role, name: name.trim() }
-          : { email, password };
+      const body = { email, password, role, ...(mode === "register" ? { name: name.trim() } : {}) };
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -74,7 +73,7 @@ export function PortalLogin() {
 
       savePortalSession(data.session);
       setSession(data.session);
-      router.push(`${ROUTES.portal}/dashboard`);
+      router.push(getPortalDashboardPath(data.session.role));
     } catch {
       setError(
         mode === "register"
@@ -107,18 +106,20 @@ export function PortalLogin() {
               {session.name}
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{session.email}</p>
-            <p className="mt-1 text-xs text-slate-500 capitalize">{session.role} portal</p>
+            <p className="mt-2 inline-flex rounded-full bg-secondary/10 px-3 py-1 text-xs font-medium capitalize text-secondary">
+              {session.role} portal
+            </p>
           </div>
 
           <div className="flex flex-col gap-3">
             <ButtonLink
-              href={`${ROUTES.portal}/dashboard`}
+              href={getPortalDashboardPath(session.role)}
               variant="secondary"
               size="lg"
               className="w-full"
             >
               <LayoutDashboard className="h-5 w-5" />
-              Go to My Portal
+              Go to {session.role === "parent" ? "Parent" : "Student"} Portal
             </ButtonLink>
             <ButtonLink href={ROUTES.home} variant="outline" size="lg" className="w-full">
               <Home className="h-5 w-5" />
@@ -170,34 +171,7 @@ export function PortalLogin() {
           </button>
         </div>
 
-        {mode === "register" && (
-          <div className="mb-6 flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-            <button
-              type="button"
-              onClick={() => setRole("parent")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors ${
-                role === "parent"
-                  ? "bg-white text-primary shadow dark:bg-slate-900 dark:text-white"
-                  : "text-slate-500"
-              }`}
-            >
-              <User className="h-4 w-4" />
-              Parent
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("student")}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors ${
-                role === "student"
-                  ? "bg-white text-primary shadow dark:bg-slate-900 dark:text-white"
-                  : "text-slate-500"
-              }`}
-            >
-              <GraduationCap className="h-4 w-4" />
-              Student
-            </button>
-          </div>
-        )}
+        <PortalRolePicker role={role} onChange={setRole} className="mb-6" />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "register" && (
@@ -257,12 +231,16 @@ export function PortalLogin() {
             {mode === "register" ? (
               <>
                 <UserPlus className="h-5 w-5" />
-                {loading ? "Creating account..." : `Create ${role === "parent" ? "Parent" : "Student"} Account`}
+                {loading
+                  ? "Creating account..."
+                  : `Create ${role === "parent" ? "Parent" : "Student"} Account`}
               </>
             ) : (
               <>
                 <LogIn className="h-5 w-5" />
-                {loading ? "Signing in..." : "Sign In"}
+                {loading
+                  ? "Signing in..."
+                  : `Sign In to ${role === "parent" ? "Parent" : "Student"} Portal`}
               </>
             )}
           </Button>
@@ -270,7 +248,7 @@ export function PortalLogin() {
 
         {mode === "signin" && (
           <p className="mt-4 text-center text-xs text-slate-500">
-            Use the same email and password you chose when creating your account.
+            Use the same portal type, email, and password from when you created your account.
           </p>
         )}
       </GlassCard>

@@ -1,10 +1,11 @@
 "use client";
 
-import { Menu, X, LogIn, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AcademicsNavDropdown } from "@/components/layout/AcademicsNavDropdown";
+import { PortalHeaderLink } from "@/components/layout/PortalHeaderLink";
 import { useTranslation } from "@/components/providers/LanguageProvider";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { SearchModal } from "@/components/ui/SearchModal";
@@ -79,13 +80,7 @@ export function Header() {
             <SearchModal className="text-white" />
             <LanguageSwitcher className="text-white" />
             <DarkModeToggle className="text-white" />
-            <Link
-              href={ROUTES.portal}
-              className="ml-2 flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10"
-            >
-              <LogIn className="h-4 w-4" />
-              {t("nav.portal")}
-            </Link>
+            <PortalHeaderLink className="ml-2 flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-white/90 transition-colors hover:bg-white/10" />
             <ButtonLink href={ROUTES.apply} variant="accent" size="sm" className="ml-2">
               {t("btn.applyNow")}
             </ButtonLink>
@@ -194,13 +189,10 @@ export function Header() {
               >
                 {t("nav.contact")}
               </Link>
-              <Link
-                href={ROUTES.portal}
-                onClick={closeMobile}
+              <PortalHeaderLink
                 className="rounded-lg px-4 py-3 text-lg font-medium text-white/90 hover:bg-white/10"
-              >
-                {t("nav.studentPortal")}
-              </Link>
+                onClick={closeMobile}
+              />
             </nav>
             <div className="mt-auto flex flex-col gap-3 pt-6">
               <ButtonLink href={ROUTES.apply} variant="accent" className="w-full" onClick={closeMobile}>

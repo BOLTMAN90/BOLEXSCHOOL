@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyPortalUser } from "@/lib/portal-users";
+import type { PortalRole } from "@/lib/portal";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -8,36 +9,35 @@ function normalizeEmail(email: string) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password } = body as {
+    const { email, password, role } = body as {
       email?: string;
       password?: string;
+      role?: PortalRole;
     };
 
-    if (!email?.trim() || !password) {
+    if (!email?.trim() || !password || !role) {
       return NextResponse.json(
-        { error: "Email and password are required." },
+        { error: "Email, password, and portal type are required." },
         { status: 400 }
       );
     }
 
-    const registeredUser = await verifyPortalUser({ email, password });
+    if (role !== "parent" && role !== "student") {
+      return NextResponse.json({ error: "Invalid portal type." }, { status: 400 });
+    }
 
-    if (!registeredUser) {
-      return NextResponse.json(
-        {
-          error:
-            "Invalid email or password. Create an account first if you are new, then sign in with the same details.",
-        },
-        { status: 401 }
-      );
+    const result = await verifyPortalUser({ email, password, role });
+
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 401 });
     }
 
     return NextResponse.json({
       success: true,
       session: {
-        email: normalizeEmail(registeredUser.email),
-        role: registeredUser.role,
-        name: registeredUser.name,
+        email: normalizeEmail(result.user.email),
+        role: result.user.role,
+        name: result.user.name,
       },
     });
   } catch {
