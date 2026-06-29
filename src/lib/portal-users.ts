@@ -16,12 +16,16 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+function emailStorageKey(email: string) {
+  return Buffer.from(normalizeEmail(email)).toString("base64url");
+}
+
 function userBlobPath(email: string) {
-  return `portal-users/${normalizeEmail(email)}.json`;
+  return `portal-users/${emailStorageKey(email)}.json`;
 }
 
 function userLocalPath(email: string) {
-  return path.join(process.cwd(), "data", "portal-users", `${normalizeEmail(email)}.json`);
+  return path.join(process.cwd(), "data", "portal-users", `${emailStorageKey(email)}.json`);
 }
 
 async function readLocalUser(email: string): Promise<StoredPortalUser | null> {
@@ -111,7 +115,13 @@ export async function registerPortalUser(input: {
   };
 
   await savePortalUser(nextUser);
-  return nextUser;
+
+  const saved = await getPortalUser(email);
+  if (!saved) {
+    throw new Error("Account could not be saved. Please try again.");
+  }
+
+  return saved;
 }
 
 export async function verifyPortalUser(input: { email: string; password: string }) {
