@@ -8,8 +8,10 @@ import { FadeInView } from "@/components/ui/FadeInView";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { TESTIMONIALS } from "@/lib/constants";
+import { useTranslation } from "@/components/providers/LanguageProvider";
 
 export function Testimonials() {
+  const { content } = useTranslation();
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -22,15 +24,16 @@ export function Testimonials() {
   }, [paused]);
 
   const testimonial = TESTIMONIALS[current];
+  const localized = content.testimonials.items[testimonial.id];
 
   return (
     <section id="testimonials" className="bg-background py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeInView>
           <SectionHeading
-            eyebrow="Testimonials"
-            title="Voices From Our Community"
-            description="Hear from parents, students, and alumni about their BOLEXMAN experience."
+            eyebrow={content.testimonials.eyebrow}
+            title={content.testimonials.title}
+            description={content.testimonials.description}
           />
         </FadeInView>
 
@@ -54,7 +57,7 @@ export function Testimonials() {
                   ))}
                 </div>
                 <blockquote className="text-lg leading-relaxed text-slate-700 dark:text-slate-300 md:text-xl">
-                  &ldquo;{testimonial.quote}&rdquo;
+                  &ldquo;{localized?.quote ?? testimonial.quote}&rdquo;
                 </blockquote>
                 <div className="mt-8 flex items-center justify-center gap-4">
                   <div className="relative h-14 w-14 overflow-hidden rounded-full">
@@ -70,7 +73,7 @@ export function Testimonials() {
                     <p className="font-heading font-semibold text-primary dark:text-white">
                       {testimonial.name}
                     </p>
-                    <p className="text-sm text-slate-500">{testimonial.role}</p>
+                    <p className="text-sm text-slate-500">{localized?.role ?? testimonial.role}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -85,7 +88,7 @@ export function Testimonials() {
                 className={`h-2 rounded-full transition-all duration-300 ${
                   i === current ? "w-8 bg-secondary" : "w-2 bg-slate-300"
                 }`}
-                aria-label={`Go to testimonial ${i + 1}`}
+                aria-label={`${content.testimonials.goTo} ${i + 1}`}
               />
             ))}
           </div>

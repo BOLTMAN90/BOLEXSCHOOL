@@ -5,17 +5,20 @@ import { Check } from "lucide-react";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ADMISSION_STEPS } from "@/lib/constants";
+import { useTranslation } from "@/components/providers/LanguageProvider";
 
 export function Admissions({ hideHeading = false }: { hideHeading?: boolean }) {
+  const { t, content } = useTranslation();
+
   return (
     <section id="admissions" className="bg-white py-20 dark:bg-slate-950 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeInView>
           {!hideHeading && (
             <SectionHeading
-              eyebrow="Admissions"
-              title="Your Journey Starts Here"
-              description="Our streamlined four-step admissions process makes it easy to join the BOLEXMAN family."
+              eyebrow={t("pages.admissions.eyebrow")}
+              title={t("pages.admissions.title")}
+              description={content.admissions.homeDescription}
             />
           )}
         </FadeInView>
@@ -41,14 +44,16 @@ export function Admissions({ hideHeading = false }: { hideHeading?: boolean }) {
                     <div className="my-4 h-8 w-0.5 bg-gradient-to-b from-secondary to-accent md:hidden" />
                   )}
                   <h3 className="mt-4 font-heading text-lg font-bold text-primary dark:text-white">
-                    {step.title}
+                    {content.admissions.steps[i].title}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                    {step.description}
+                    {content.admissions.steps[i].description}
                   </p>
                   <div className="mt-3 flex items-center gap-1 text-success">
                     <Check className="h-4 w-4" />
-                    <span className="text-xs font-medium">Step {step.step}</span>
+                    <span className="text-xs font-medium">
+                      {content.admissions.stepLabel} {step.step}
+                    </span>
                   </div>
                 </div>
               </FadeInView>

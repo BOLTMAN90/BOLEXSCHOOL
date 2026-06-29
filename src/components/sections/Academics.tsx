@@ -29,7 +29,7 @@ const programDescKeys: Record<string, TranslationKey> = {
 };
 
 export function Academics({ hideHeading = false }: { hideHeading?: boolean }) {
-  const { t } = useTranslation();
+  const { t, content } = useTranslation();
 
   return (
     <section id="academics" className="bg-background py-20 md:py-28">
@@ -74,7 +74,7 @@ export function Academics({ hideHeading = false }: { hideHeading?: boolean }) {
                     {t(programDescKeys[program.id])}
                   </p>
                   <p className="mt-0 max-h-0 overflow-hidden text-sm text-white/70 opacity-0 transition-all duration-500 group-hover:mt-3 group-hover:max-h-24 group-hover:opacity-100">
-                    {program.extendedDescription}
+                    {content.programs.extended[program.id]}
                   </p>
                   <button className="mt-4 flex items-center gap-2 text-sm font-semibold text-accent opacity-0 transition-all duration-300 group-hover:opacity-100">
                     {t("programs.learnMore")}

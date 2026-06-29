@@ -10,8 +10,10 @@ import { HERO_IMAGE, HERO_STATS, ROUTES } from "@/lib/constants";
 import { useTranslation } from "@/components/providers/LanguageProvider";
 import { floatAnimation } from "@/lib/animations";
 
+const statKeys = ["students", "teachers", "successRate", "years"] as const;
+
 export function Hero() {
-  const { t } = useTranslation();
+  const { t, content } = useTranslation();
   const { scrollY } = useScroll();
   const prefersReducedMotion = useReducedMotion();
   const y = useTransform(scrollY, [0, 500], [0, prefersReducedMotion ? 0 : 150]);
@@ -21,7 +23,7 @@ export function Hero() {
       <motion.div style={{ y }} className="absolute inset-0">
         <Image
           src={HERO_IMAGE}
-          alt="Students learning and collaborating at BOLEXMAN"
+          alt={content.hero.imageAlt}
           fill
           priority
           className="object-cover"
@@ -66,7 +68,7 @@ export function Hero() {
         <div className="mt-16 grid grid-cols-2 gap-4 md:grid-cols-4 lg:mt-24">
           {HERO_STATS.map((stat, i) => (
             <motion.div
-              key={stat.label}
+              key={statKeys[i]}
               variants={floatAnimation}
               animate="animate"
               transition={{ delay: i * 0.5 }}
@@ -75,7 +77,7 @@ export function Hero() {
                 <AnimatedCounter
                   value={stat.value}
                   suffix={stat.suffix}
-                  label={stat.label}
+                  label={content.hero.stats[statKeys[i]]}
                   className="text-2xl text-white md:text-3xl"
                   labelClassName="text-white/70"
                 />

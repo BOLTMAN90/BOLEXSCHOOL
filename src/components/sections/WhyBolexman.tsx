@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { GraduationCap, Lightbulb, Trophy } from "lucide-react";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { WHY_CARDS } from "@/lib/constants";
+import { useTranslation } from "@/components/providers/LanguageProvider";
 import { cardHover, staggerContainer } from "@/lib/animations";
 
 const iconMap = {
@@ -13,15 +13,19 @@ const iconMap = {
   Trophy,
 };
 
+const iconKeys = ["GraduationCap", "Lightbulb", "Trophy"] as const;
+
 export function WhyBolexman() {
+  const { content } = useTranslation();
+
   return (
     <section id="why" className="bg-background py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeInView>
           <SectionHeading
-            eyebrow="Why BOLEXMAN"
-            title="Excellence in Every Dimension"
-            description="We combine rigorous academics with character development to prepare students for a world of opportunity."
+            eyebrow={content.why.eyebrow}
+            title={content.why.title}
+            description={content.why.description}
           />
         </FadeInView>
 
@@ -32,8 +36,8 @@ export function WhyBolexman() {
           viewport={{ once: true, margin: "-80px" }}
           className="grid gap-8 md:grid-cols-3"
         >
-          {WHY_CARDS.map((card) => {
-            const Icon = iconMap[card.icon as keyof typeof iconMap];
+          {content.why.cards.map((card, i) => {
+            const Icon = iconMap[iconKeys[i]];
             return (
               <motion.div
                 key={card.title}

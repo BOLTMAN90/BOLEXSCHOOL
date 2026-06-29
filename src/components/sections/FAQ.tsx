@@ -4,25 +4,27 @@ import * as Accordion from "@radix-ui/react-accordion";
 import { Plus, Minus } from "lucide-react";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { FAQ_ITEMS } from "@/lib/constants";
+import { useTranslation } from "@/components/providers/LanguageProvider";
 
 export function FAQ({ hideHeading = false }: { hideHeading?: boolean }) {
+  const { content } = useTranslation();
+
   return (
     <section id="faq" className="bg-background py-20 md:py-28">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <FadeInView>
           {!hideHeading && (
             <SectionHeading
-              eyebrow="FAQ"
-              title="Frequently Asked Questions"
-              description="Find answers to common questions about admissions, programs, and campus life."
+              eyebrow={content.faq.eyebrow}
+              title={content.faq.title}
+              description={content.faq.description}
             />
           )}
         </FadeInView>
 
         <FadeInView delay={0.1}>
           <Accordion.Root type="single" collapsible className="space-y-3">
-            {FAQ_ITEMS.map((item, i) => (
+            {content.faq.items.map((item, i) => (
               <Accordion.Item
                 key={i}
                 value={`item-${i}`}
@@ -36,9 +38,7 @@ export function FAQ({ hideHeading = false }: { hideHeading?: boolean }) {
                   </Accordion.Trigger>
                 </Accordion.Header>
                 <Accordion.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                  <div className="px-6 pb-5 text-slate-600 dark:text-slate-400">
-                    {item.answer}
-                  </div>
+                  <div className="px-6 pb-5 text-slate-600 dark:text-slate-400">{item.answer}</div>
                 </Accordion.Content>
               </Accordion.Item>
             ))}
