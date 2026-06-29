@@ -4,9 +4,6 @@ import { get, put } from "@vercel/blob";
 import bcrypt from "bcryptjs";
 import type { PortalRole } from "./portal";
 
-const BLOB_PATHNAME = "portal-users.json";
-const LOCAL_USERS_FILE = path.join(process.cwd(), "data", "portal-users.json");
-
 export interface StoredPortalUser {
   email: string;
   passwordHash: string;
@@ -19,40 +16,49 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-async function readLocalUsers(): Promise<StoredPortalUser[]> {
+function userBlobPath(email: string) {
+  return `portal-users/${normalizeEmail(email)}.json`;
+}
+
+function userLocalPath(email: string) {
+  return path.join(process.cwd(), "data", "portal-users", `${normalizeEmail(email)}.json`);
+}
+
+async function readLocalUser(email: string): Promise<StoredPortalUser | null> {
   try {
-    const raw = await readFile(LOCAL_USERS_FILE, "utf8");
-    return JSON.parse(raw) as StoredPortalUser[];
+    const raw = await readFile(userLocalPath(email), "utf8");
+    return JSON.parse(raw) as StoredPortalUser;
   } catch {
-    return [];
+    return null;
   }
 }
 
-async function writeLocalUsers(users: StoredPortalUser[]) {
-  await mkdir(path.dirname(LOCAL_USERS_FILE), { recursive: true });
-  await writeFile(LOCAL_USERS_FILE, JSON.stringify(users, null, 2), "utf8");
+async function writeLocalUser(user: StoredPortalUser) {
+  const filePath = userLocalPath(user.email);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, JSON.stringify(user, null, 2), "utf8");
 }
 
-async function readBlobUsers(): Promise<StoredPortalUser[] | null> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
+async function readBlobUser(email: string): Promise<StoredPortalUser | null | undefined> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return undefined;
 
   try {
-    const result = await get(BLOB_PATHNAME, { access: "private" });
-    if (!result?.stream) return [];
+    const result = await get(userBlobPath(email), { access: "private" });
+    if (!result?.stream) return null;
 
     const raw = await new Response(result.stream).text();
-    return JSON.parse(raw) as StoredPortalUser[];
+    return JSON.parse(raw) as StoredPortalUser;
   } catch {
-    return [];
+    return null;
   }
 }
 
-async function writeBlobUsers(users: StoredPortalUser[]) {
+async function writeBlobUser(user: StoredPortalUser) {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     throw new Error("BLOB_READ_WRITE_TOKEN is not configured.");
   }
 
-  await put(BLOB_PATHNAME, JSON.stringify(users, null, 2), {
+  await put(userBlobPath(user.email), JSON.stringify(user, null, 2), {
     access: "private",
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -60,26 +66,18 @@ async function writeBlobUsers(users: StoredPortalUser[]) {
   });
 }
 
-export async function listPortalUsers(): Promise<StoredPortalUser[]> {
-  const blobUsers = await readBlobUsers();
-  if (blobUsers !== null) return blobUsers;
-  return readLocalUsers();
+export async function getPortalUser(email: string): Promise<StoredPortalUser | null> {
+  const blobUser = await readBlobUser(email);
+  if (blobUser !== undefined) return blobUser;
+  return readLocalUser(email);
 }
 
-async function savePortalUsers(users: StoredPortalUser[]) {
+async function savePortalUser(user: StoredPortalUser) {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    await writeBlobUsers(users);
+    await writeBlobUser(user);
     return;
   }
-  await writeLocalUsers(users);
-}
-
-export async function findPortalUser(email: string, role: PortalRole) {
-  const users = await listPortalUsers();
-  const normalizedEmail = normalizeEmail(email);
-  return users.find(
-    (user) => normalizeEmail(user.email) === normalizedEmail && user.role === role
-  );
+  await writeLocalUser(user);
 }
 
 export async function registerPortalUser(input: {
@@ -99,35 +97,25 @@ export async function registerPortalUser(input: {
     throw new Error("Password must be at least 8 characters.");
   }
 
-  const users = await listPortalUsers();
-  const exists = users.some(
-    (user) => normalizeEmail(user.email) === email && user.role === input.role
-  );
-
-  if (exists) {
-    throw new Error("An account with this email already exists for that portal type.");
+  const existing = await getPortalUser(email);
+  if (existing) {
+    throw new Error("An account with this email already exists. Please sign in instead.");
   }
 
-  const passwordHash = await bcrypt.hash(input.password, 10);
   const nextUser: StoredPortalUser = {
     email,
-    passwordHash,
+    passwordHash: await bcrypt.hash(input.password, 10),
     role: input.role,
     name,
     createdAt: new Date().toISOString(),
   };
 
-  users.push(nextUser);
-  await savePortalUsers(users);
+  await savePortalUser(nextUser);
   return nextUser;
 }
 
-export async function verifyPortalUser(input: {
-  email: string;
-  password: string;
-  role: PortalRole;
-}) {
-  const user = await findPortalUser(input.email, input.role);
+export async function verifyPortalUser(input: { email: string; password: string }) {
+  const user = await getPortalUser(input.email);
   if (!user) return null;
 
   const valid = await bcrypt.compare(input.password, user.passwordHash);

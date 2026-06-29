@@ -41,6 +41,7 @@ yarn-error.log*
 
 # portal user data (stored locally in dev)
 /data/portal-users.json
+/data/portal-users/
 
 # typescript
 *.tsbuildinfo

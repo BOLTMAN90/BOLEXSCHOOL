@@ -7,11 +7,13 @@ import {
   BookOpen,
   Calendar,
   GraduationCap,
+  Home,
   LogOut,
   MessageSquare,
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ROUTES } from "@/lib/constants";
 import {
@@ -55,6 +57,16 @@ export function PortalDashboard() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <ButtonLink href={ROUTES.home} variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400">
+          <Home className="h-4 w-4" />
+          Back to Website
+        </ButtonLink>
+        <ButtonLink href={ROUTES.portal} variant="ghost" size="sm" className="text-slate-600 dark:text-slate-400">
+          My Account
+        </ButtonLink>
+      </div>
+
       <GlassCard className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
@@ -74,10 +86,16 @@ export function PortalDashboard() {
             <p className="text-sm text-slate-600 dark:text-slate-400">{session.email}</p>
           </div>
         </div>
-        <Button type="button" variant="outline" onClick={handleLogout}>
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href={ROUTES.home} variant="outline" size="md">
+            <Home className="h-4 w-4" />
+            Browse Site
+          </ButtonLink>
+          <Button type="button" variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
       </GlassCard>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -96,11 +114,12 @@ export function PortalDashboard() {
 
       <GlassCard>
         <h3 className="font-heading text-lg font-semibold text-primary dark:text-white">
-          Portal preview
+          Your portal account
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-          You are signed in successfully. Full grades, attendance, fees, and messaging will be
-          connected here in a future update. For admissions or support, visit our contact page.
+          You are signed in successfully. Use the header menu or &quot;Back to Website&quot; anytime
+          to explore the school site while staying logged in. Full grades, attendance, fees, and
+          messaging will be connected here in a future update.
         </p>
       </GlassCard>
     </div>

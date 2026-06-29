@@ -1,8 +1,5 @@
 export const PORTAL_SESSION_KEY = "bolexman_portal_session";
 
-export const PORTAL_DEMO_EMAIL = "demo@bolexman.edu";
-export const PORTAL_DEMO_PASSWORD = "demo123";
-
 export type PortalRole = "student" | "parent";
 
 export interface PortalSession {
@@ -29,4 +26,8 @@ export function savePortalSession(session: PortalSession) {
 
 export function clearPortalSession() {
   sessionStorage.removeItem(PORTAL_SESSION_KEY);
+}
+
+export function hasPortalSession() {
+  return readPortalSession() !== null;
 }
