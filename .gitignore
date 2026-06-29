@@ -39,8 +39,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# portal user data (stored locally in dev)
+/data/portal-users.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
 .vercel
+
+.env*

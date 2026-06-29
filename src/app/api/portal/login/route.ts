@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { CONTACT } from "@/lib/constants";
 import { PORTAL_DEMO_EMAIL, PORTAL_DEMO_PASSWORD, type PortalRole } from "@/lib/portal";
+import { verifyPortalUser } from "@/lib/portal-users";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -46,21 +47,28 @@ export async function POST(request: Request) {
       normalizedEmail === normalizeEmail(adminEmail) &&
       password === adminPassword;
 
-    if (!isDemoLogin && !isAdminLogin) {
+    const registeredUser = await verifyPortalUser({ email, password, role });
+
+    if (!isDemoLogin && !isAdminLogin && !registeredUser) {
       return NextResponse.json(
         {
-          error: `Invalid credentials. Use ${PORTAL_DEMO_EMAIL} / ${PORTAL_DEMO_PASSWORD} for demo, or your admin email and password.`,
+          error:
+            "Invalid credentials. Create an account first, use the demo login, or sign in with your registered email.",
         },
         { status: 401 }
       );
     }
+
+    const sessionName = registeredUser
+      ? registeredUser.name
+      : getDisplayName(normalizedEmail, role);
 
     return NextResponse.json({
       success: true,
       session: {
         email: normalizedEmail,
         role,
-        name: getDisplayName(normalizedEmail, role),
+        name: sessionName,
       },
     });
   } catch {

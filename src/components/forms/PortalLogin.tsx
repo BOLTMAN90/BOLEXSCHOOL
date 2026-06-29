@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, User, GraduationCap } from "lucide-react";
+import { LogIn, User, GraduationCap, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -14,8 +14,11 @@ import {
   type PortalRole,
 } from "@/lib/portal";
 
+type PortalMode = "signin" | "register";
+
 export function PortalLogin() {
   const router = useRouter();
+  const [mode, setMode] = useState<PortalMode>("signin");
   const [role, setRole] = useState<PortalRole>("parent");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,9 +28,15 @@ export function PortalLogin() {
     const form = new FormData(e.currentTarget);
     const email = form.get("email") as string;
     const password = form.get("password") as string;
+    const name = (form.get("name") as string) || "";
 
     if (!email || !password) {
       setError("Please enter your email and password.");
+      return;
+    }
+
+    if (mode === "register" && !name.trim()) {
+      setError("Please enter your full name.");
       return;
     }
 
@@ -35,10 +44,16 @@ export function PortalLogin() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/portal/login", {
+      const endpoint = mode === "register" ? "/api/portal/register" : "/api/portal/login";
+      const body =
+        mode === "register"
+          ? { email, password, role, name: name.trim() }
+          : { email, password, role };
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify(body),
       });
 
       const data = (await response.json()) as {
@@ -47,22 +62,58 @@ export function PortalLogin() {
       };
 
       if (!response.ok || !data.session) {
-        setError(data.error || "Invalid credentials. Please try again.");
+        setError(data.error || "Something went wrong. Please try again.");
         return;
       }
 
       savePortalSession(data.session);
       router.push(`${ROUTES.portal}/dashboard`);
     } catch {
-      setError("Unable to sign in right now. Please try again.");
+      setError(
+        mode === "register"
+          ? "Unable to create your account right now. Please try again."
+          : "Unable to sign in right now. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const switchMode = (nextMode: PortalMode) => {
+    setMode(nextMode);
+    setError("");
+  };
+
   return (
     <div className="mx-auto max-w-md">
       <GlassCard>
+        <div className="mb-6 flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+          <button
+            type="button"
+            onClick={() => switchMode("signin")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors ${
+              mode === "signin"
+                ? "bg-white text-primary shadow dark:bg-slate-900 dark:text-white"
+                : "text-slate-500"
+            }`}
+          >
+            <LogIn className="h-4 w-4" />
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode("register")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-colors ${
+              mode === "register"
+                ? "bg-white text-primary shadow dark:bg-slate-900 dark:text-white"
+                : "text-slate-500"
+            }`}
+          >
+            <UserPlus className="h-4 w-4" />
+            Create Account
+          </button>
+        </div>
+
         <div className="mb-6 flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
           <button
             type="button"
@@ -91,6 +142,22 @@ export function PortalLogin() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === "register" && (
+            <div>
+              <label htmlFor="portalName" className="mb-2 block text-sm font-medium">
+                Full Name
+              </label>
+              <input
+                id="portalName"
+                name="name"
+                type="text"
+                autoComplete="name"
+                placeholder="Jane Doe"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-secondary dark:border-slate-700 dark:bg-slate-900"
+              />
+            </div>
+          )}
+
           <div>
             <label htmlFor="portalEmail" className="mb-2 block text-sm font-medium">
               Email Address
@@ -112,10 +179,14 @@ export function PortalLogin() {
               id="portalPassword"
               name="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
               placeholder="••••••••"
+              minLength={mode === "register" ? 8 : undefined}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-secondary dark:border-slate-700 dark:bg-slate-900"
             />
+            {mode === "register" && (
+              <p className="mt-1 text-xs text-slate-500">At least 8 characters</p>
+            )}
           </div>
 
           {error && (
@@ -125,8 +196,17 @@ export function PortalLogin() {
           )}
 
           <Button type="submit" variant="secondary" size="lg" className="w-full" disabled={loading}>
-            <LogIn className="h-5 w-5" />
-            {loading ? "Signing in..." : `Sign In to ${role === "parent" ? "Parent" : "Student"} Portal`}
+            {mode === "register" ? (
+              <>
+                <UserPlus className="h-5 w-5" />
+                {loading ? "Creating account..." : `Create ${role === "parent" ? "Parent" : "Student"} Account`}
+              </>
+            ) : (
+              <>
+                <LogIn className="h-5 w-5" />
+                {loading ? "Signing in..." : `Sign In to ${role === "parent" ? "Parent" : "Student"} Portal`}
+              </>
+            )}
           </Button>
         </form>
 
